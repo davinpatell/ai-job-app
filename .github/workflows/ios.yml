@@ -1,0 +1,29 @@
+name: iOS Build
+
+on:
+  push:
+    branches: [ main, feat/fastlane-ci ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore GoogleService-Info.plist
+        run: |
+          echo "$GSI_PLIST_BASE64" | base64 --decode > ./ios/AIJobApp/GoogleService-Info.plist
+        env:
+          GSI_PLIST_BASE64: ${{ secrets.GSI_PLIST_BASE64 }}
+
+      - name: Install fastlane
+        run: gem install fastlane -NV
+
+      - name: Run fastlane beta
+        run: bundle exec fastlane beta
+        env:
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_CONTENT: ${{ secrets.ASC_KEY_CONTENT }}

@@ -1,0 +1,3 @@
+app_identifier("com.yourcompany.AIJobApp")
+apple_id("your_apple_id@example.com")
+team_id("YOUR_TEAM_ID")

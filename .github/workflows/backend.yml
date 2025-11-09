@@ -1,0 +1,21 @@
+name: Backend CI
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install backend deps
+        run: npm ci
+        working-directory: backend
+      - name: Run DB migrations
+        run: |
+          npm run migrate
+        working-directory: backend
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
