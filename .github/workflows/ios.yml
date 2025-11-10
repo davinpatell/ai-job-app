@@ -1,14 +1,23 @@
-name: iOS Build
+name: iOS Build (fastlane)
 
 on:
   push:
     branches: [ main, feat/fastlane-ci ]
+  pull_request:
 
 jobs:
   build:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          # Adjust path if runner has a different Xcode version; this is common and safe
+          sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer || true
+          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer || true
+          xcodebuild -version
 
       - name: Restore GoogleService-Info.plist
         run: |
@@ -16,11 +25,18 @@ jobs:
         env:
           GSI_PLIST_BASE64: ${{ secrets.GSI_PLIST_BASE64 }}
 
-      - name: Install fastlane
-        run: gem install fastlane -NV
+      - name: Install bundler & gems (user gems + vendor/bundle)
+        run: |
+          gem install --user-install bundler
+          export PATH="$(ruby -e 'print Gem.user_dir')/bin:$PATH"
+          bundle config set --local path 'vendor/bundle'
+          bundle config set --local disable_shared_gems true
+          bundle install --jobs 4 --retry 3
+        working-directory: .
 
       - name: Run fastlane beta
         run: bundle exec fastlane beta
+        working-directory: .
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD }}
